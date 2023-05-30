@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/category")
 @Slf4j
@@ -67,11 +69,39 @@ public class CategoryController {
           categoryService.remove(ids);
         return R.success("分类信息删除成功");
     }
+    /**
+     * @Description: 根据id修改分类信息
+     * @param category
+     * @return: com.itheima.reggie.common.R<java.lang.String>
+     * @Author: Jingq
+     * @Date: 2023/5/30 9:18
+     */
     @PutMapping
     public R<String> update(@RequestBody Category category){
     log.info("修改分类信息:{}",category);
           categoryService.updateById(category);
         return R.success("修改分类信息成功!");
     }
+
+/** 菜品管理/添加菜品/菜品分类
+ * @Description: 根据条件查询分类数据
+ * @param category
+ * @return: com.itheima.reggie.common.R<java.util.List<com.itheima.reggie.entity.Category>>
+ * @Author: Jingq
+ * @Date: 2023/5/30 9:39
+ */
+@GetMapping("/list")
+    public R<List<Category>> list(Category category){
+        //条件构造器
+        LambdaQueryWrapper<Category> queryWrapper = new LambdaQueryWrapper<>();
+        //添加条件,如果客户端传过来的category不是空值，那就将type赋值给数据库Category中的type
+        queryWrapper.eq(category.getType() !=null,Category::getType,category.getType());//前端对type=1进行判断
+        //添加排序条件
+        queryWrapper.orderByAsc(Category::getSort).orderByDesc(Category::getUpdateTime);
+
+        List<Category> list = categoryService.list(queryWrapper);
+        return R.success(list);
+    }
+
 
 }
