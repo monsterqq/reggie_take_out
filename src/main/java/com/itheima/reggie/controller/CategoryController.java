@@ -62,7 +62,7 @@ public class CategoryController {
  * @Date: 2023/5/29 15:20
  */
 
-@DeleteMapping
+    @DeleteMapping
     public R<String> delete(Long ids){
         log.info("删除分类，ids为：{}",ids);
         //categoryService.removeById(ids);

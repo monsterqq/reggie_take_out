@@ -7,4 +7,8 @@ import com.itheima.reggie.entity.Dish;
 public interface DishService extends IService<Dish> {
     //新增菜品，同时插入对应的口味数据，dish，dish——flavor
     public void saveWithFlavor(DishDto dishDto);
+
+   public  void updateWithFlavor(DishDto dishDto);
+
+   public  DishDto getByIdWithFlavor(Long id);
 }
