@@ -15,6 +15,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -87,8 +88,79 @@ public class SetmealController {
     return R.success(setmealDishPage);
 }
 
+    /**
+     * @Description: 删除套餐及其相关数据  停售才可以删除
+     * @param ids
+     * @return: void
+     * @Author: Jingq
+     * @Date: 2023/5/31 16:24
+     */
+@DeleteMapping
+public R<String> delete(@RequestParam List<Long> ids){
+    setmealService.removeWishDish(ids);
+    return R.success("套餐数据删除成功!");
+}
+
+/**
+ * @Description: 修改状态
+ * @param status
+ * @param ids
+ * @return: com.itheima.reggie.common.R<java.lang.String>
+ * @Author: Jingq
+ * @Date: 2023/5/31 17:26
+ */
+
+    @PostMapping("/status/{status}")
+    public R<String> updateMulStatus(@PathVariable Integer status,Long[] ids){
+    for(int i=0;i<ids.length;i++) {
+        Long id = ids[i];
+        Setmeal setmeal = setmealService.getById(id);
+        setmeal.setStatus(status);
+        setmealService.updateById(setmeal);
+
+    }
+        return R.success("修改套餐状态成功!");
+    }
+
+/**
+ * @Description: 修改时获取信息
+ * @param id
+ * @return: com.itheima.reggie.common.R<com.itheima.reggie.dto.SetmealDto>
+ * @Author: Jingq
+ * @Date: 2023/5/31 17:52
+ */
+
+@GetMapping("/{id}")
+    public R<SetmealDto> get(@PathVariable Long id){
+    SetmealDto setmealDto=setmealService.getByIdWithDish(id);
+    return R.success(setmealDto);
+}
+/**
+ * @Description: 修改后进行保存
+ * @param setmealDto
+ * @return: com.itheima.reggie.common.R<java.lang.String>
+ * @Author: Jingq
+ * @Date: 2023/5/31 17:52
+ */
+
+@PutMapping
+    public R<String> update(@RequestBody SetmealDto setmealDto){
+        setmealService.updateWithDish(setmealDto);
+        return R.success("修改套餐成功!");
+}
 
 
+
+@GetMapping("/list")
+public R<List<Setmeal>> list(Setmeal setmeal){//key-value不需要注解
+    LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
+    queryWrapper.eq(Setmeal::getStatus,setmeal.getStatus());
+    queryWrapper.eq(setmeal.getCategoryId()!=null,Setmeal::getCategoryId,setmeal.getCategoryId());
+    queryWrapper.orderByDesc(Setmeal::getUpdateTime);
+    List<Setmeal> list = setmealService.list(queryWrapper);
+    System.out.println(list+"hhhhh");
+    return R.success(list);
+}
 
 
 

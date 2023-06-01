@@ -6,9 +6,12 @@ import com.itheima.reggie.common.R;
 import com.itheima.reggie.dto.DishDto;
 import com.itheima.reggie.entity.Category;
 import com.itheima.reggie.entity.Dish;
+import com.itheima.reggie.entity.DishFlavor;
+import com.itheima.reggie.entity.SetmealDish;
 import com.itheima.reggie.service.CategoryService;
 import com.itheima.reggie.service.DishFlavorService;
 import com.itheima.reggie.service.DishService;
+import com.itheima.reggie.service.SetmealDishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,8 @@ public class DishController {
     private DishFlavorService dishFlavorService;
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private SetmealDishService setmealDishService;
 /**
  * @Description: 新增菜品,数据库两张表操作案例
  * @param dishDto
@@ -164,8 +169,9 @@ for(int i=0;i<ids.length;i++){
 }
     return R.success("修改菜品状态成功!");
 }
+
 /**
- * @Description: 新增套餐
+ * @Description: 新增套餐之添加菜品
  * @param dish
  * @return: com.itheima.reggie.common.R<java.util.List<com.itheima.reggie.entity.Dish>>
  * @Author: Jingq
@@ -173,7 +179,7 @@ for(int i=0;i<ids.length;i++){
  */
 
 @GetMapping("/list")
-    public R<List<Dish>> list(Dish dish){//传categoryId也可以，但是Dish更加通用,通过categoryId返回菜品名称的集合
+    public R<List<DishDto>> list(Dish dish){//传categoryId也可以，但是Dish更加通用,通过categoryId返回菜品名称的集合
     //添加菜品
     LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
     queryWrapper.eq(dish.getCategoryId()!=null,Dish::getCategoryId,dish.getCategoryId());
@@ -181,10 +187,30 @@ for(int i=0;i<ids.length;i++){
     queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);//添加排序条件
     List<Dish> list = dishService.list(queryWrapper);
 
+//categoryName
+    List<DishDto> dishDtoList = list.stream().map((item) -> {
+        DishDto dishDto = new DishDto();
+        BeanUtils.copyProperties(item, dishDto);
+        Long categoryId = item.getCategoryId();
+        Category category = categoryService.getById(categoryId);
+        if (categoryId != null) {
+            String categoryName = category.getName();
+            dishDto.setCategoryName(categoryName);
+        }
+        //当前菜品id
+        Long dishId = item.getId();
+        LambdaQueryWrapper<DishFlavor> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(DishFlavor::getDishId, dishId);
+        //select * from dish_flavor where dish_id=?
+        List<DishFlavor> dishFlavorList = dishFlavorService.list(lambdaQueryWrapper);
+        dishDto.setFlavors(dishFlavorList);
+        return dishDto;
+    }).collect(Collectors.toList());
     //点击保存，将套餐以json形式提交到服务端
 
-    return R.success(list);
+    return R.success(dishDtoList);
 }
+
 
 
 
